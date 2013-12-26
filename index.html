@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Emathtable - A jquery table tool</title>
+        <meta charset="UTF-8">
+        <link type="text/css" rel="stylesheet" media="all" href="style.css" />
+        <link type="text/css" rel="stylesheet" media="all" href="mathquill/mathquill.css" />
+        <link type="text/css" rel="stylesheet" media="all" href="jsxgraph.css" />
+        <script type="text/javascript" src="jquery.min.js"></script>
+        <script type="text/javascript" src="jquery-ui-1.8.16.custom.min.js"></script>
+        <script type="text/javascript" src="jsxgraphcore.js"></script>
+        <script type="text/javascript" src="calculator.js"></script>
+        <script type="text/javascript" src="mathquill/mathquill.js"></script>
+        <script type="text/javascript" src="mqpanel.js"></script>
+        <script type="text/javascript" src="jquery.emathtable.js"></script>
+        <script type="text/javascript" src="chart.js"></script>
+        <script type="text/javascript">
+            jQuery(function(){
+                jQuery('#mathquillpanel').mqpanel();
+                var data = {rows:5,cols:2,values:[['x','f(x)'],['0','2'],['0','2'],['0','2'],['0','2']]};
+                var data2 = {editable: true, rows: 5, cols: 2, values: [["x","f(x)"],["0","2"],["1","3"],["2","4"],["3","5"]]};
+
+                jQuery('.box').emathtable(data2);
+                jQuery('#iseditable').attr('checked', data2.editable).change(function(){
+                    var etdata = jQuery('.box').emathtable('get');
+                    etdata.editable = jQuery(this).is(':checked');
+                    jQuery('.box').emathtable(etdata);
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <a href="https://github.com/e-math/emathtable"><img style="position: absolute; top: 0; left: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_red_aa0000.png" alt="Fork me on GitHub"></a>
+        <header>
+            <div id="head-content">
+                <img id="logo" src="images/emath-logo.png" alt="E-Math" />
+                <h1>Emathtable</h1>
+                <h2>Create math tables and charts</h2>
+            </div>
+        </header>
+        <div id="mathquillpanel"></div>
+        <article class="content">
+            <h2>Example</h2>
+            <p>Here is an example, how to use <code>jquery.emathtable.js</code>.</p>
+<div class="codeexample">
+&lt;div class="box"&gt;
+&lt;/div&gt;
+&lt;script type="text/javascript"&gt;
+    jQuery('.box').emathtable({
+        editable: true,
+        rows: 5,
+        cols: 2,
+        values: [["x","f(x)"],["0","2"],["1","3"],["2","4"],["3","5"]]
+    });
+&lt;/script&gt;
+</div>
+            <p>Click the checkbox to toggle between edit mode and show mode.</p>
+            <p>
+                <input id="iseditable" type="checkbox" /><label for="iseditable">Editable</label>
+            </p>
+            <div class="box"></div>
+            <h2>Usage</h2>
+            <p>In edit mode you can:</p>
+            <ul>
+                <li><strong>Change the style</strong> of the table from the menu behind the gear button.</li>
+                <li><strong>Add or remove</strong> rows and columns in add/remove mode which is started and stopped with plus/minus button.</li>
+                <li><strong>Edit the cells.</strong> Cells are in math mode as default, but one can toggle between math mode and text mode with $ (dollar) key.</li>
+                <li><strong>Move</strong> between cells:</li>
+                <ul>
+                    <li><strong>Up</strong> and <strong>down</strong> arrows go up and down respectively.</li>
+                    <li><strong>Left</strong> and <strong>right</strong> arrows together with ctrl-key or alt-key (or command in Mac) move the focus to the cell on the left or right respectively.</li>
+                    <li><strong>Enter</strong> moves the focus downwards to the next cell.</li>
+                    <li><strong>Tabulator</strong> key moves the focus to the next cell (left to right, top to bottom) and shift+tab to the previous cell.</li>
+                    <li><strong>Esc</strong>-key loses the focus.</li>
+                </ul>
+            </ul>
+            <pre id="databox"></pre>
+        </article>
+        <footer>
+            <div id="disclaimerbox">
+                <div id="leftlogo">
+                    <img src="images/CB_logo-200.png" alt="" />
+                </div>
+                <div id="rightlogo">
+                    <img src="images/EU_with_references-300.png" alt="" />
+                </div>
+                <div id="disclaimer">
+                    The contents of the website reflect the authors' views. The Managing Authority of the Central Baltic INTERREG IVA Programme cannot be held liable for the information published by the project partners. 
+                </div>
+            </div>
+        </footer>
+    </body>
+</html>
