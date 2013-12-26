@@ -1,7 +1,7 @@
 Emathtable
 ==============
 
-See the [demo page](http://e-math/github.io/emathtable).
+See the [demo page](http://e-math.github.io/emathtable).
 
 What?
 -----
