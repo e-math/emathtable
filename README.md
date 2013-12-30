@@ -21,6 +21,7 @@ Emathtable depends on external JavaScript libraries:
 * MathQuill
 * jQuery
 * jQuery-ui
+
 Chart-plugin needs also
 * JSXGraph
 
@@ -30,6 +31,7 @@ The tool was developed in EU-funded [E-Math -project](http://emath.eu) by
 * Petri Salmela
 * Rolf Lindén
 * Petri Sallasmaa
+
 and the copyrights are owned by [Four Ferries oy](http://fourferries.fi).
 
 License?
