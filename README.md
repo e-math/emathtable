@@ -50,11 +50,13 @@ Usage
 Initing a table
 ----
 Init a new, empty, editable table. (size: 2x2)
+
 ```javascript
 jQuery('#box').emathtable({editable: true});
 ```
 
 Init a new 5x2 table in editing mode with existing data.
+
 ```javascript
 jQuery('.box').emathtable({
      editable: true,
@@ -65,7 +67,8 @@ jQuery('.box').emathtable({
 ```
 
 Init a new graph in view mode with existing data.
-```
+
+```javascript
 jQuery('#box').emathtable({
     rows: 5,
     cols: 2,
@@ -78,6 +81,7 @@ Getting data from table
 
 Get the data as a JavaScript object from the table in html-element with
 id `#box`.
+
 ```javascript
 var data = jQuery('#box').emathtable('get');
 ```
@@ -90,8 +94,8 @@ In edit mode you can:
 * **Add or remove** rows and columns in add/remove mode which is started and stopped with plus/minus button.
 * **Edit the cells.** Cells are in math mode as default, but one can toggle between math mode and text mode with **$ (dollar)** key.
 * **Move** between cells:
-** **Up** and **down** arrows go up and down respectively.
-** **Left** and **right** arrows together with *ctrl-key* or *alt-key* (or *command* in Mac) move the focus to the cell on the left or right respectively.
-** **Enter** moves the focus downwards to the next cell.
-** **Tabulator** key moves the focus to the next cell (left to right, top to bottom) and shift+tab to the previous cell.
-** **Esc**-key loses the focus from the cell.
+  * **Up** and **down** arrows go up and down respectively.
+  * **Left** and **right** arrows together with *ctrl-key* or *alt-key* (or *command* in Mac) move the focus to the cell on the left or right respectively.
+  * **Enter** moves the focus downwards to the next cell.
+  * **Tabulator** key moves the focus to the next cell (left to right, top to bottom) and shift+tab to the previous cell.
+  * **Esc**-key loses the focus from the cell.
