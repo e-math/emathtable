@@ -30,7 +30,7 @@ Who?
 The tool was developed in EU-funded [E-Math -project](http://emath.eu) by
 * [Petri Salmela](https://github.com/pesasa)
 * [Rolf Lindén](https://github.com/trg1984)
-* Petri Sallasmaa
+* [Petri Sallasmaa](https://github.com/pekasa)
 
 and the copyrights are owned by [Four Ferries oy](http://fourferries.fi).
 
