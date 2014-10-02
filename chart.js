@@ -453,13 +453,13 @@
                     
                     // All columns are created equal.
                     var xMin = startCol;
-                    var xMax = (values.length - startRow + 1) * (values[0].length - startCol) - 2;
+                    var xMax = (values.length - startRow + 1) * (values[0].length - startCol) - 1;
                     
                 }
                 
                 if (this.chartStyle === 'bar') {
                     yMin  = -1;
-                    xMin  = 0.5;
+                    xMin  = -0.5;
                     xMax -= 0.5;
                     this.grid = false;
                 }

@@ -547,9 +547,17 @@
             '.emathtable[tabletype="value_table"] table.emtable tbody td {border-left: 2px solid black; padding: 0.2em; min-width: 2em; text-align: right;}'+
             '.emathtable[tabletype="value_table"] table.emtable thead td {padding: 0 0.2em;}'+
             '.emathtable[tabletype="value_table"] table.emtable tbody td:first-child {border-left: none;}'+
+            '.emathtable[tabletype="column_table"] table.emtable {border-collapse: collapse; background-color: white;}'+
+            '.emathtable[tabletype="column_table"] table.emtable tbody tr:first-child td {border-bottom: 2px solid black; text-align: center;}'+
+            '.emathtable[tabletype="column_table"] table.emtable tbody td {border-left: 2px solid black; padding: 0.4em 1em; min-width: 2em; text-align: center;}'+
+            '.emathtable[tabletype="column_table"] table.emtable thead td {padding: 0 0.2em;}'+
+            '.emathtable[tabletype="column_table"] table.emtable tbody td:first-child {border-left: none;}'+
             '.emathtable[tabletype="grid_table"] table.emtable {border-collapse: collapse;}'+
             '.emathtable[tabletype="grid_table"] table.emtable tbody td {border: 1px solid black; padding: 0.2em; background-color: white; min-width: 3em;}'+
             '.emathtable[tabletype="grid_table"] table.emtable thead td {padding: 0 0.2em;}'+
+            '.emathtable[tabletype="theorytable"] table.emtable {border-collapse: collapse;}'+
+            '.emathtable[tabletype="theorytable"] table.emtable tbody td {border: 1px solid black; padding: 0.5em 1em; background-color: white; min-width: 3em;}'+
+            '.emathtable[tabletype="theorytable"] table.emtable thead td {padding: 0.5 1em;}'+
             '.emathtable[tabletype="noborder"] table.emtable {border-collapse: collapse;}'+
             '.emathtable[tabletype="noborder"] table.emtable tbody td {border: none; padding: 0.2em; min-width: 3em;}'+
             '.emathtable[tabletype="blank"] table.emtable {border-collapse: collapse; background-color: white;}'+
