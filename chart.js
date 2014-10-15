@@ -1,12 +1,14 @@
 /***
 |Name|Chart.js|
-|Version|1.1|
+|Version|1.2|
 |Author|Rolf Lindén (rolind@utu.fi)|
 |Type|plugin|
 |Requires|jQuery 1.4.3 or newer, calculator.js.|
 |Description|Chart addon for E-Math table plugin.|
 !!!!!Revisions
 <<<
+20141015.1222 ''Version 1.2''
+* Fixed margins of barchart and mathquill for labels in barchart. (pesasa)
 20130812.1127 ''Version 1.1''
 * Fixed label color association bug.
 20130611.1539 ''Version 1.00''
@@ -749,7 +751,7 @@
                     }
                 }
                 if (this.showLegend) this.place.find('.legend').find('.legendCaption').mathquill();
-                if (this.showColumnCaption) this.place.find('.a').mathquill();
+                if (this.showColumnCaption) this.place.find('.a, .columnCaption').mathquill();
                 this.place.find('.plotlabel').mathquill();
                
                 board.unsuspendUpdate();
