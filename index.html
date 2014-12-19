@@ -20,12 +20,43 @@
                 var data = {rows:5,cols:2,values:[['x','f(x)'],['0','2'],['0','2'],['0','2'],['0','2']]};
                 var data2 = {editable: true, rows: 5, cols: 2, values: [["x","f(x)"],["0","2"],["1","3"],["2","4"],["3","5"]]};
 
-                jQuery('.box').emathtable(data2);
+                jQuery('#box1').emathtable(data2);
                 jQuery('#iseditable').attr('checked', data2.editable).change(function(){
-                    var etdata = jQuery('.box').emathtable('get');
+                    var etdata = jQuery('#box1').emathtable('get');
                     etdata.editable = jQuery(this).is(':checked');
-                    jQuery('.box').emathtable(etdata);
+                    jQuery('#box1').emathtable(etdata);
+                    
+                    var etdata2 = jQuery('#box2').emathtable('get');
+                    etdata2.settings = jQuery('#box1').emathtable('createDefaultUserSettings');
+                    etdata2.settings.mode = etdata.editable ? 'edit' : 'view';
+                    jQuery('#box2').emathtable(etdata2);
                 });
+                
+                var newDataFormat = {
+                	    "type": "emathtable",
+                		"settings": {
+                			"username": "user1234",
+                			"mode": "edit",
+                			"lang": "fi"
+                		},
+                		"metadata": {
+                			"creator": "Name",
+                			"created": "2012-04-23T18:25:43.511Z",
+                			"modifier": null,
+                			"modified": null,
+                			"tags": ["tag1", "tag2"]
+                		},
+                	    "data":  {
+                	    	rows: 5,
+                	    	cols: 2,
+                	    	values : [["x","f(x)"],["0","2"],["1","3"],["2","4"],["3","5"]]
+                	    }
+                	}
+
+                jQuery('#box2').emathtable(newDataFormat);
+
+                
+                
             });
         </script>
     </head>
@@ -41,7 +72,34 @@
         <div id="mathquillpanel"></div>
         <article class="content">
             <h2>Example</h2>
-            <p>Here is an example, how to use <code>jquery.emathtable.js</code>.</p>
+            <p>Here is an example, how to use <code>jquery.emathtable.js</code> (new version).</p>
+<div class="codeexample">
+&lt;div class="box"&gt;
+&lt;/div&gt;
+&lt;script type="text/javascript"&gt;
+    jQuery('.box').emathtable({
+       	    "type": "emathtable",
+       		"settings": {
+       			"username": "user1234",
+       			"mode": "edit",
+       			"lang": "fi"
+       		},
+       		"metadata": {
+       			"creator": "Name",
+       			"created": "2012-04-23T18:25:43.511Z",
+       			"modifier": null,
+       			"modified": null,
+       			"tags": ["tag1", "tag2"]
+       		},
+       	    "data":  {
+       	    	rows: 5,
+       	    	cols: 2,
+       	    	values : [["x","f(x)"],["0","2"],["1","3"],["2","4"],["3","5"]]
+       	    }
+       	});
+&lt;/script&gt;
+</div>
+            <p>Here is an example, how to use <code>jquery.emathtable.js</code> (older version).</p>
 <div class="codeexample">
 &lt;div class="box"&gt;
 &lt;/div&gt;
@@ -58,7 +116,8 @@
             <p>
                 <input id="iseditable" type="checkbox" /><label for="iseditable">Editable</label>
             </p>
-            <div class="box"></div>
+            <div class="box" id="box1"></div>
+            <div class="box" id="box2"></div>
             <h2>Usage</h2>
             <p>In edit mode you can:</p>
             <ul>

@@ -1,12 +1,14 @@
 /***
 |Name|Chart.js|
-|Version|1.1|
+|Version|1.2|
 |Author|Rolf Lindén (rolind@utu.fi)|
 |Type|plugin|
 |Requires|jQuery 1.4.3 or newer, calculator.js.|
 |Description|Chart addon for E-Math table plugin.|
 !!!!!Revisions
 <<<
+20141015.1222 ''Version 1.2''
+* Fixed margins of barchart and mathquill for labels in barchart. (pesasa)
 20130812.1127 ''Version 1.1''
 * Fixed label color association bug.
 20130611.1539 ''Version 1.00''
@@ -26,7 +28,7 @@
  *   http://fourferries.fi
  * License: GNU AGPL
  */
-(function ($) {
+;(function ($) {
     { /**  CSS & glyphs                    **/
         var glyphs   =
             'iVBORw0KGgoAAAANSUhEUgAAAGQAAAAUCAYAAAB7wJiVAAAAAXNSR0IArs4c6QAAAAZiS0dEAAAA' +
@@ -247,9 +249,9 @@
         /**
          * Add flatten function to arrays.
          */
-        Array.prototype.flatten = function() {
-            return ([].concat.apply([], this));
-        }
+        //Array.prototype.flatten = function() {
+        //    return ([].concat.apply([], this));
+        //}
         
         function strToFloat(s) {
             try { var result = parseFloat($().calculator('calculate', s)); }
@@ -313,7 +315,8 @@
                         }
                     }
                     
-                    values = count(values.flatten(), this.fCompare, this.fName);
+                    //values = count(values.flatten(), this.fCompare, this.fName);
+                    values = count([].concat.apply([], values), this.fCompare, this.fName);
                     showRowLabels = true;
                     showColLabels = false;
                     startRow = 0;
@@ -453,13 +456,13 @@
                     
                     // All columns are created equal.
                     var xMin = startCol;
-                    var xMax = (values.length - startRow + 1) * (values[0].length - startCol) - 2;
+                    var xMax = (values.length - startRow + 1) * (values[0].length - startCol) - 1;
                     
                 }
                 
                 if (this.chartStyle === 'bar') {
                     yMin  = -1;
-                    xMin  = 0.5;
+                    xMin  = -0.5;
                     xMax -= 0.5;
                     this.grid = false;
                 }
@@ -749,7 +752,7 @@
                     }
                 }
                 if (this.showLegend) this.place.find('.legend').find('.legendCaption').mathquill();
-                if (this.showColumnCaption) this.place.find('.a').mathquill();
+                if (this.showColumnCaption) this.place.find('.a, .columnCaption').mathquill();
                 this.place.find('.plotlabel').mathquill();
                
                 board.unsuspendUpdate();
@@ -862,6 +865,6 @@
             }
         }
     }
-})(jQuery)
+})(jQuery);
 
 //}}}
