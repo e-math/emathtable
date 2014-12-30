@@ -100,7 +100,7 @@
         'createEmptyMetadata': function( ) {
         	return {"creator" : null,
             	"created": null,
-            	"modifuer": null,
+            	"modifier": null,
             	"modified": null,
             	"tags": []
         	};
@@ -108,7 +108,8 @@
         'createDefaultUserSettings': function( ) {
         	return {"username" : null,
             	"mode": "view",
-            	"lang": "fi"
+            	"lang": "fi",
+            	"theme": "default_theme"
         	};
         }
     }
@@ -305,7 +306,7 @@
     Emathtable.prototype.initEvents = function(){
         var emtable = this;
         this.place.bind('get', function(e, options){
-            return emtable.getData(options);
+            return emtable.getData(emtable.useLegacyDataType, options);
         });
         this.place.bind('tabletype', function(e, options){
             return emtable.setType(options);
@@ -399,18 +400,19 @@
     }
     
     
-    
-    /**
-     * Return data the (the old format)
-     */
-    Emathtable.prototype.getData = function(options){
-    	if (this.useLegacyDataType) {
+
+    Emathtable.prototype.getData = function(legacyFormat, options){
+    	if (legacyFormat) {
     		return this.getDataAsLegacyFormat(options);
     	} else {
     		return this.getDataAsNewFormat(options);    		
     	}
     }
     
+    
+    /**
+     * Return data the (the old format)
+     */
     Emathtable.prototype.getDataAsLegacyFormat = function(options){
         var data = {rows: this.rows, cols: this.cols, values: this.values, tabletype: this.tabletype, theme: this.theme};
         
@@ -428,6 +430,7 @@
 	 */
     Emathtable.prototype.getDataAsNewFormat = function(options){
     	
+    	// TODO: the changed metadata!
         var result = {type: "emathtable", metadata: this.metadata, data: {rows: this.rows, cols: this.cols, values: this.values, tabletype: this.tabletype, theme: this.theme}};
         
         if (typeof($.fn.chart) !== 'undefined') { 
@@ -455,7 +458,7 @@
                 var chart = this.place.find('.chart').empty();
                 if (chart.length == 0) this.place.append('<div class="chart"></div>');
                 
-                var opt = {}; this.getData(opt);
+                var opt = {}; this.getData(true, opt);
                 
                 opt.result.chartStyle = this.chartStyle;
                 opt.result.showPlot = true;
@@ -580,7 +583,7 @@
         if (typeof($.fn.chart) !== 'undefined') {
             var chart = this.place.find('.chart').empty();
             if (chart.length > 0) {
-                var opt = {}; this.getData(opt);
+                var opt = {}; this.getData(true, opt);
                 
                 opt.result.chartStyle = this.chartStyle;
                 opt.result.showPlot = true;
