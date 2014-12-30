@@ -605,6 +605,9 @@
             }
         }
         
+    	this.metadata.modifier = this.usersettings.username;
+    	this.metadata.modified = new Date();     
+        
         var e = jQuery.Event("emathtable_changed");
         this.place.trigger( e ); 
     }
