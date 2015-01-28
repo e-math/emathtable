@@ -53,6 +53,12 @@
                 	}
 
                 jQuery('#box2').emathtable(newDataFormat);
+                
+                jQuery('#box2').bind('emathtable_changed', function(){
+                    var $fg = jQuery(this);
+                    var fgdata = $fg.emathtable('get');
+                    jQuery('#databox').html(JSON.stringify(fgdata, null, 4));
+                });
 
                 
                 
@@ -117,6 +123,8 @@
             </p>
             <div class="box" id="box1"></div>
             <div class="box" id="box2"></div>
+            
+            <pre id="databox" class="codeexample"></pre>
             <h2>Usage</h2>
             <p>In edit mode you can:</p>
             <ul>
@@ -132,7 +140,7 @@
                     <li><strong>Esc</strong>-key loses the focus.</li>
                 </ul>
             </ul>
-            <pre id="databox"></pre>
+
         </article>
         <footer>
             <div id="disclaimerbox">
