@@ -19,7 +19,7 @@
         if (typeof(options) === 'string'){
             var cmd = options;
             if (arguments[0] === 'createDefaultUserSettings') {
-            	return methods['createDefaultUserSettings'];
+                return methods['createDefaultUserSettings'];
             }
             options = arguments[1] || {};
             if (typeof(options) === 'string'){
@@ -30,7 +30,7 @@
             this.trigger(cmd, options);
             return options.result;
         } else if (typeof(options) === 'object' || !options) {
-        	// Passing this 'this' to methods.init (so this there is also 'this')
+                // Passing this 'this' to methods.init (so this there is also 'this')
             return methods.init.apply(this, arguments);
         } else {
             $.error('Method ' +  options + ' does not exist on jQuery.emathtable' );
@@ -41,76 +41,60 @@
     
     /**** jQuery-plugin for TableElements. *****/
     var methods = {
-        'init': function(options){
-            
-        	var useLegacyDataType = (options['metadata'] == null || options['type'] == null);
+        'init' : function(options) {
 
-        	var settings;
+            var useLegacyDataType = (options['type'] == null);
+
+            var settings;
             
-        	if (useLegacyDataType) {
-    	        // Extend default settings with user given options.
-    	        settings = $.extend({
-    	            tabletype: 'value_table',              // Type of table (styled with css)
-    	            theme: "default_theme",             // html class for other styling
-    	            rows: 2,
-    	            cols: 2,
-    	            chartVisible: true,
-    	            values: [],
-    	            editable: false,
-                    settings: methods.createDefaultUserSettings(),
-                    metadata: methods.createEmptyMetadata()
-    	        }, options);
-        	} else {
-        		if (!('settings' in options)) {
-        			options.settings = methods.createDefaultUserSettings();
-        		}
-        		
-                settings = {
-                	tabletype: 'value_table',
-                	theme: "default_theme", 
-                    editable: (options.settings.mode == 'edit'),
-    	            rows: (('rows' in options.data) ? options.data.rows : 2),
-    	            cols: (('cols' in options.data) ? options.data.cols : 2),
-    				settings : options.settings,  
-    				metadata: options.metadata,
-    				values: options.data.values,
-    		        chartVisible: options.data.chartVisible,
-                	chartStyle: options.data.chartStyle,
-                	chartParams: options.data.chart
-                };
-        	}
+            options = $.extend(true, {}, Emathtable.defaults, options);
+
+            if (useLegacyDataType) {
+                // Extend default settings with user given options.
+                settings = $.extend({
+                    tabletype : 'value_table', // Type of table (styled with
+                                                // css)
+                    theme : "default_theme", // html class for other styling
+                    rows : 2,
+                    cols : 2,
+                    chartVisible : true,
+                    values : [],
+                    editable : false,
+                    settings : options.settings,
+                    metadata : options.metadata
+                }, options);
+            } else {
+
+                settings = $.extend({
+                    tabletype : 'value_table',
+                    theme : "default_theme",
+                    editable : (options.settings.mode == 'edit'),
+                    rows : options.data.rows,
+                    cols :  options.data.cols,
+                    settings : options.settings,
+                    metadata : options.metadata,
+                    values : options.data.values,
+                    chartVisible : options.data.chartVisible,
+                    chartStyle : options.data.chartStyle,
+                    //chartParams : options.data.chart
+                }, options.data);
+            }
             // Return this so that methods of jQuery element can be chained.
-            return this.each(function(){
+            return this.each(function() {
                 // Create new Emathtable object.
-                var emtable = new Emathtable(this, settings, useLegacyDataType);
+                var emtable = new Emathtable(this, settings);
                 // Init the emathtable
                 emtable.init();
             });
         },
         'get': function(){
             var $place = $(this).eq(0);
-            var options = {};
-            $place.trigger('get', options);
-            return options.result;
+            $place.trigger('getdata');
+            return $place.data('[[elementdata]]');;
         },
         'set': function(params){
             var $place = $(this);
             $place.trigger('set', [params]);
-        },
-        'createEmptyMetadata': function( ) {
-        	return {"creator" : null,
-            	"created": null,
-            	"modifier": null,
-            	"modified": null,
-            	"tags": []
-        	};
-        },
-        'createDefaultUserSettings': function( ) {
-        	return {"username" : null,
-            	"mode": "view",
-            	"lang": "fi",
-            	"theme": "default_theme"
-        	};
         }
     }
     
@@ -126,11 +110,10 @@
     }
 
     
-    var Emathtable = function(place, settings, useLegacyDataType){
+    var Emathtable = function(place, settings){
         // Constructor for Emathtable object.
         this.usersettings = settings.settings;
         this.metadata = settings.metadata;
-        this.useLegacyDataType = useLegacyDataType;
         
         this.place = $(place);
         this.place.addClass('emathtable');
@@ -142,8 +125,8 @@
         this.editable = settings.editable;
         this.chartVisible = settings.chartVisible;
         this.chartStyle = settings.chartStyle;
-        this.chartParams = settings.chart;
-        if (typeof(this.chartParams) === 'undefined') this.chartParams = new Object();
+        //this.chartParams = settings.chart;
+        //if (typeof(this.chartParams) === 'undefined') this.chartParams = new Object();
         
         // Make sure, the table is full rows x cols
         for (var i = 0; i < this.rows; i++){
@@ -305,8 +288,8 @@
     
     Emathtable.prototype.initEvents = function(){
         var emtable = this;
-        this.place.bind('get', function(e, options){
-            return emtable.getData(emtable.useLegacyDataType, options);
+        this.place.bind('getdata', function(e){
+            emtable.place.data('[[elementdata]]', emtable.getData());
         });
         this.place.bind('tabletype', function(e, options){
             return emtable.setType(options);
@@ -401,45 +384,24 @@
     
     
 
-    Emathtable.prototype.getData = function(legacyFormat, options){
-    	if (legacyFormat) {
-    		return this.getDataAsLegacyFormat(options);
-    	} else {
-    		return this.getDataAsNewFormat(options);    		
-    	}
-    }
-    
-    
-    /**
-     * Return data the (the old format)
-     */
-    Emathtable.prototype.getDataAsLegacyFormat = function(options){
-        var data = {rows: this.rows, cols: this.cols, values: this.values, tabletype: this.tabletype, theme: this.theme};
+    Emathtable.prototype.getData = function(options){
+        var vals = $.extend(true, [], this.values);
+        // TODO: the changed metadata!
+        var result = {type: "emathtable", metadata: this.metadata, data: {rows: this.rows, cols: this.cols, values: vals, tabletype: this.tabletype}};
         
         if (typeof($.fn.chart) !== 'undefined') { 
-            data.chartVisible = this.chartVisible;
-            data.chartStyle = this.chartStyle;
-            data.chartParams = this.chartParams;
+                if (typeof this.chartVisible !== 'undefined') {
+                    result.data.chartVisible = this.chartVisible;
+                }
+                result.data.chartStyle = this.chartStyle;
+                //result.data.chartParams = $.extend(true, {}, this.chartParams);
         }
         
-        options.result = data;
-    }
-    
-    /**
-	 * Return data (new format)
-	 */
-    Emathtable.prototype.getDataAsNewFormat = function(options){
-    	
-    	// TODO: the changed metadata!
-        var result = {type: "emathtable", metadata: this.metadata, data: {rows: this.rows, cols: this.cols, values: this.values, tabletype: this.tabletype, theme: this.theme}};
-        
-        if (typeof($.fn.chart) !== 'undefined') { 
-        	result.data.chartVisible = this.chartVisible;
-        	result.data.chartStyle = this.chartStyle;
-        	result.data.chartParams = this.chartParams;
+        if (options) {
+            options.result = result;
         }
         
-        options.result = result;
+        return result;
     
     }
     
@@ -458,7 +420,7 @@
                 var chart = this.place.find('.chart').empty();
                 if (chart.length == 0) this.place.append('<div class="chart"></div>');
                 
-                var opt = {}; this.getData(true, opt);
+                var opt = {}; this.getData(opt);
                 
                 opt.result.chartStyle = this.chartStyle;
                 opt.result.showPlot = true;
@@ -475,7 +437,7 @@
                     opt.result.colLabels = true;
                 }
                 
-                opt.result = $.extend(this.chartParams, opt.result);
+                //opt.result = $.extend(this.chartParams, opt.result);
                 this.place.find('.chart').chart(opt.result);
                 
             }
@@ -583,7 +545,7 @@
         if (typeof($.fn.chart) !== 'undefined') {
             var chart = this.place.find('.chart').empty();
             if (chart.length > 0) {
-                var opt = {}; this.getData(true, opt);
+                var opt = {}; this.getData(opt);
                 
                 opt.result.chartStyle = this.chartStyle;
                 opt.result.showPlot = true;
@@ -600,16 +562,19 @@
                     opt.result.colLabels = true;
                 }
                 
-                opt.result = $.extend(this.chartParams, opt.result);
+                //opt.result = $.extend(this.chartParams, opt.result);
                 chart.chart(opt.result);
             }
         }
         
-    	this.metadata.modifier = this.usersettings.username;
-    	this.metadata.modified = new Date();     
+        this.metadata.modifier = this.usersettings.username;
+        this.metadata.modified = new Date();     
         
+        // TODO: Remove this one when we do not support the old book anymore
         var e = jQuery.Event("emathtable_changed");
-        this.place.trigger( e ); 
+        this.place.trigger( e );
+        // This is the one elementset is listening for
+        this.place.trigger('element_changed', {type: 'emathtable'});
     }
     
     
@@ -728,6 +693,53 @@
             '.emathtable[tabletype="value_table"] a[ttype="value_table"], .emathtable[tabletype="grid_table"] a[ttype="grid_table"], .emathtable[tabletype="blank"] a[ttype="blank"], .emathtable[tabletype="noborder"] a[ttype="noborder"], .emathtable[tabletype="head_table"] a[ttype="head_table"], .emathtable[tabletype="prop_table"] a[ttype="prop_table"] {border: 1px solid red;}'+
             ''
     }
+
+        
+    /***************************************************************************
+     * Default settings.
+     **************************************************************************/
+    Emathtable.defaults = {
+        metadata : {
+            creator : '',
+            created : '',
+            modifier : '',
+            modified : '',
+            tags : []
+        },
+        data : {
+            rows: 2,
+            cols: 2,
+            values : [],
+            chartVisible : true
+        },
+        settings : {
+            mode : 'view',
+            preview : false,
+            uilang : 'en'
+        }
+    }
+
+    Emathtable.elementinfo = {
+        type : 'emathtable',
+        elementtype : 'elements',
+        jquery : 'emathtable',
+        name : 'Emath table',
+        icon : '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="20" height="20" viewBox="0 0 30 30" class="mini-icon mini-icon-equationarray"><path style="stroke: none;" d="M4 7 l3 3 l3 -3 l1 1 l-3 3 l3 3 l-1 1 l-3 -3 l-3 3 l-1 -1 l3 -3 l-3 -3z m8 2 l6 0 l0 1 l-6 0z m0 3 l6 0 l0 1 l-6 0z m8 -5 l3 3 l3 -3 l1 1 l-3 3 l3 3 l-1 1 l-3 -3 l-3 3 l-1 -1 l3 -3 l-3 -3z M7 17 a3 3 0 0 0 0 6 a3 3 0 0 0 0 -6z m0 1 a2 2 0 0 1 0 4 a2 2 0 0 1 0 -4z m5 0 l6 0 l0 1 l-6 0z m0 3 l6 0 l0 1 l-6 0z m11 -4 a3 3 0 0 0 0 6 a3 3 0 0 0 0 -6z m0 1 a2 2 0 0 1 0 4 a2 2 0 0 1 0 -4z" /></svg>',
+        description : {
+            en : 'Math tables',
+            fi : 'Matematiikkataulukot'
+        },
+        classes : [ 'math', 'content' ]
+    }
+
+    if (typeof ($.fn.elementset) === 'function') {
+        $.fn.elementset('addelementtype', Emathtable.elementinfo);
+    }
+
+    if (typeof ($.fn.elementpanel) === 'function') {
+        $.fn.elementpanel('addelementtype', Emathtable.elementinfo);
+    }
+    
 
 })(jQuery)
 

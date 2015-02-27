@@ -135,9 +135,20 @@
     { /**  Chart plotter                     **/
         
         function Chart(params) {
-            this.params = params;
-            for (var item in params)
-                this[item] = params[item];
+            //this.params = params;
+            for (var item in params) {
+                if (item === 'data') {
+                    for (var dataItem in params[item]) {
+                        this[dataItem] = params[item][dataItem];
+                        params[dataItem] = params[item][dataItem];
+                    }
+                } else {
+                    this[item] = params[item];                    
+                }
+                
+            }
+            
+            
             
             // Checks if editor's CSS information is already written to document's head.
             if ($('head style#chartstyle').length == 0) {
