@@ -28,9 +28,9 @@ Chart-plugin needs also
 Who?
 ----
 The tool was developed in EU-funded [E-Math -project](http://emath.eu) by
-* Petri Salmela
-* Rolf Lindén
-* Petri Sallasmaa
+* [Petri Salmela](https://github.com/pesasa)
+* [Rolf Lindén](https://github.com/trg1984)
+* [Petri Sallasmaa](https://github.com/pekasa)
 
 and the copyrights are owned by [Four Ferries oy](http://fourferries.fi).
 
