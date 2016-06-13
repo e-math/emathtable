@@ -18,6 +18,9 @@
         // Test for numberline commands and trigger command with options.
         if (typeof(options) === 'string'){
             var cmd = options;
+            if (arguments[0] === 'createDefaultUserSettings') {
+                return methods['createDefaultUserSettings'];
+            }
             options = arguments[1] || {};
             if (typeof(options) === 'string'){
                 options = {name: options};
@@ -26,51 +29,138 @@
             options.result = this;
             this.trigger(cmd, options);
             return options.result;
+        } else if (typeof(options) === 'object' || !options) {
+                // Passing this 'this' to methods.init (so this there is also 'this')
+            return methods.init.apply(this, arguments);
+        } else {
+            $.error('Method ' +  options + ' does not exist on jQuery.emathtable' );
+            return this;
         }
-        // Extend default settings with user given options.
-        var settings = $.extend({
-            tabletype: 'value_table',              // Type of table (styled with css)
-            theme: "default_theme",             // html class for other styling
-            rows: 2,
-            cols: 2,
-            chartVisible: true,
-            values: [],
-            editable: false
-        }, options);
 
-        // Return this so that methods of jQuery element can be chained.
-        return this.each(function(){
-            // Create new Emathtable object.
-            var emtable = new Emathtable(this, settings);
-            // Init the emathtable
-            emtable.init();
-        });
     }
+    
+    /**** jQuery-plugin for TableElements. *****/
+    var methods = {
+        'init' : function(options) {
+
+            var useLegacyDataType = (options['type'] == null);
+
+            var settings;
+            
+            options = $.extend(true, {}, Emathtable.defaults, options);
+
+            if (useLegacyDataType) {
+                // Extend default settings with user given options.
+                settings = $.extend(true, {},
+                    Emathtable.defaults,
+                    {
+                        metadata: options.metadata,
+                        data: {
+                            tabletype: options.tabletype,
+                            theme: options.theme,
+                            rows: options.rows,
+                            cols: options.cols,
+                            chartVisible: options.chartVisible,
+                            values: options.values,
+                        },
+                        settings: options.settings
+                    }
+                );
+                settings.settings.mode = (options.editable ? 'edit' : 'view');
+                //settings = $.extend({
+                //    tabletype : 'value_table', // Type of table (styled with css)
+                //    theme : "default_theme", // html class for other styling
+                //    rows : 2,
+                //    cols : 2,
+                //    chartVisible : true,
+                //    values : [],
+                //    editable : false,
+                //    settings : options.settings,
+                //    metadata : options.metadata
+                //}, options);
+            } else {
+                settings = options;
+            //
+            //    settings = $.extend({
+            //        tabletype : 'value_table',
+            //        theme : "default_theme",
+            //        editable : (options.settings.mode == 'edit'),
+            //        rows : options.data.rows,
+            //        cols :  options.data.cols,
+            //        settings : options.settings,
+            //        metadata : options.metadata,
+            //        values : options.data.values,
+            //        chartVisible : options.data.chartVisible,
+            //        chartStyle : options.data.chartStyle,
+            //        //chartParams : options.data.chart
+            //    }, options.data);
+            }
+            // Return this so that methods of jQuery element can be chained.
+            return this.each(function() {
+                // Create new Emathtable object.
+                var emtable = new Emathtable(this, settings);
+                // Init the emathtable
+                emtable.init();
+            });
+        },
+        'get': function(){
+            var $place = $(this).eq(0);
+            $place.trigger('getdata');
+            return $place.data('[[elementdata]]');;
+        },
+        'set': function(params){
+            var $place = $(this);
+            $place.trigger('set', [params]);
+        }
+    }
+    
+    $.fn.tableelement = function(method){
+        if (methods[method]) {
+            return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
+        } else if (typeof(method) === 'object' || !method) {
+            return methods.init.apply(this, arguments);
+        } else {
+            $.error('Method ' + method + ' does not exist in tableelement.');
+            return false;
+        }
+    }
+
     
     var Emathtable = function(place, settings){
         // Constructor for Emathtable object.
-        this.settings = settings;
+        settings = $.extend(true, {}, Emathtable.defaults, settings);
+        
+        this.settings = settings.settings;
+        this.metadata = settings.metadata;
+        this.data = settings.data;
+        this.type = settings.type;
+        
+        console.log('emathtable', this);
         this.place = $(place);
         this.place.addClass('emathtable');
-        this.theme = this.settings.theme;
-        this.tabletype = this.settings.tabletype;
-        this.rows = parseInt(this.settings.rows);
-        this.cols = parseInt(this.settings.cols);
-        this.values = this.settings.values;
-        this.editable = this.settings.editable;
-        this.chartVisible = this.settings.chartVisible;
-        this.chartStyle = this.settings.chartStyle;
-        this.chartParams = this.settings.chart;
-        if (typeof(this.chartParams) === 'undefined') this.chartParams = new Object();
+        this.name = this.place.attr('data-element-name');
+        //this.theme = settings.theme;
+        //this.tabletype = settings.tabletype;
+        //this.rows = parseInt(settings.rows);
+        //this.cols = parseInt(settings.cols);
+        //this.values = settings.values;
+        //this.editable = settings.editable;
+        //this.chartVisible = settings.chartVisible;
+        //this.chartStyle = settings.chartStyle;
+        //this.chartParams = settings.chart;
+        //if (typeof(this.chartParams) === 'undefined') this.chartParams = new Object();
+        
+        console.log('settings.mode', this.settings.mode);
+        this.setMode(this.settings.mode);
         
         // Make sure, the table is full rows x cols
-        for (var i = 0; i < this.rows; i++){
-            if (this.values.length <= i){
-                this.values[i] = [];
+        for (var i = 0; i < this.data.rows; i++){
+            if (this.data.values.length <= i){
+                this.data.values[i] = [];
             }
-            for (var j = 0; j < this.cols; j++){
-                if (this.values[i].length <= j){
-                    this.values[i][j] = '';
+            for (var j = 0; j < this.data.cols; j++){
+                if (this.data.values[i].length <= j){
+                    this.data.values[i][j] = '';
                 }
             }
         }
@@ -81,7 +171,7 @@
         
         // Add chart button if chart element has been loaded.
         if (typeof($.fn.chart) !== 'undefined') {
-            if (typeof(this.chartStyle) === 'undefined') this.chartStyle = 'none';
+            if (typeof(this.data.chartStyle) === 'undefined') this.data.chartStyle = 'none';
             $('<div></div>').chart({showPlot: false});
         }
     }
@@ -92,7 +182,7 @@
         if (this.place.hasClass('emathtable_rendered')){
 //             return false;
         }
-        this.place.addClass('emathtable_rendered').addClass(this.settings.theme).attr('tabletype',this.tabletype);
+        this.place.addClass('emathtable_rendered').addClass(this.data.theme).attr('tabletype',this.data.tabletype);
         var toolbar = this.editable ? '<div class="emtabletoolbar"><a href="javascript:;" class="emtabletoolbutton emtabletypeselect"><span></span></a><a href="javascript:;" class="emtabletoolbutton emtableaddremove"><span></span></a></div>' : '';
         
         var $emtable = $('<div class="emtablewrapper"><table class="emtable"><tbody></tbody></table>'+toolbar+'</div>');
@@ -113,6 +203,18 @@
         return this;
     }
     
+    /******
+     * Set the mode of the element.
+     * @param {String} mode - the mode of element: 'view', 'edit', 'review', 'author',...
+     ******/
+    Emathtable.prototype.setMode = function(mode){
+        this.settings.mode = mode || 'view';
+        var modesettings = Emathtable.modes[mode] || Emathtable.modes.view;
+        this.editable = modesettings.editable;
+        this.authorable = modesettings.authorable;
+        this.reviewable = modesettings.reviewable;
+    }
+    
     Emathtable.prototype.draw = function(){
         if (this.editable){
             this.edit();
@@ -120,7 +222,7 @@
             this.show();
         }
         
-        if ( this.chartVisible ) this.showChart(this.chartStyle);
+        if ( this.data.chartVisible ) this.showChart(this.data.chartStyle);
     }
     
     Emathtable.prototype.edit = function(){
@@ -128,10 +230,10 @@
         var emtable = this;
         this.place.addClass('emtable_editmode');
         var tablebody = '';
-        for (var i = 0; i < this.rows; i++){
+        for (var i = 0; i < this.data.rows; i++){
             tablebody += '<tr>';
-            for (var j = 0; j < this.cols; j++){
-                tablebody += '<td><span class="mathquill-editable">'+this.values[i][j]+'</span></td>';
+            for (var j = 0; j < this.data.cols; j++){
+                tablebody += '<td><span class="mathquill-editable">'+this.data.values[i][j]+'</span></td>';
             }
             tablebody += '</tr>';
         }
@@ -146,7 +248,7 @@
             var $alltd = $tr.find('td');
             var row = $alltr.index($tr);
             var col = $alltd.index($td);
-            emtable.values[row][col] = $elem.mathquill('latex');
+            emtable.data.values[row][col] = $elem.mathquill('latex');
             emtable.changed();
         }).bind('keydown.emtable',function(e){
             var $mqelem = $(this);
@@ -203,10 +305,10 @@
         var emtable = this;
         this.place.removeClass('emtable_editmode');
         var tablebody = '';
-        for (var i = 0; i < this.rows; i++){
+        for (var i = 0; i < this.data.rows; i++){
             tablebody += '<tr>';
-            for (var j = 0; j < this.cols; j++){
-                tablebody += '<td><span class="mathquill-embedded-latex">'+this.values[i][j]+'</span></td>';
+            for (var j = 0; j < this.data.cols; j++){
+                tablebody += '<td><span class="mathquill-embedded-latex">'+this.data.values[i][j]+'</span></td>';
             }
             tablebody += '</tr>';
         }
@@ -223,10 +325,14 @@
     
     Emathtable.prototype.initEvents = function(){
         var emtable = this;
-        this.place.bind('get', function(e, options){
-            return emtable.getData(options);
+        this.place.on('setmode', function(e, data) {
+            e.stopPropagation();
+            emtable.setMode(data);
         });
-        this.place.bind('tabletype', function(e, options){
+        this.place.on('getdata', function(e){
+            emtable.place.data('[[elementdata]]', emtable.getData());
+        });
+        this.place.on('tabletype', function(e, options){
             return emtable.setType(options);
         });
         
@@ -258,14 +364,14 @@
                     .hide().show('slide',{direction: 'left'}, 300)
                     .find('a').click(function(e){
                         $(this).parents('.emathtable').emathtable('tabletype', $(this).attr('ttype'));
-                        if (emtable.allowedChartStyles(emtable.chartStyle).indexOf(emtable.tabletype) < 0) emtable.hideChart();
+                        if (emtable.allowedChartStyles(emtable.data.chartStyle).indexOf(emtable.data.tabletype) < 0) emtable.hideChart();
                         emtable.changed();
                     });
                 $(this).addClass('isopen');
             }
         });
         
-        this.place.find('a.emtabletogglechart').click(function(e){
+        this.place.find('a.emtabletogglechart').off('click').on('click', function(e){
             if ($(this).hasClass('isopen')){
                 $(this).parent('.emtabletoolbar').find('.emtablechartlistwrapper ul')
                     .hide('slide', {direction: 'left'}, 300, function(e){
@@ -281,15 +387,14 @@
                 var chartMenu = 
                     '<div class="emtablechartlistwrapper">\
                         <ul>'
-                            if (emtable.allowedChartStyles('none').indexOf(emtable.tabletype) >= 0) chartMenu += '<li><a href="javascript:;" ctype="none" ' + (emtable.chartStyle == 'none' ? 'class="selected"': '') + '><span></span></a> None</li>';
-                            if (emtable.allowedChartStyles('scatter').indexOf(emtable.tabletype) >= 0)  chartMenu +='<li><a href="javascript:;" ctype="scatter" ' + (emtable.chartStyle == 'scatter' ? 'class="selected"': '') + '><span></span></a> Scatter plot</li>'
-                            if (emtable.allowedChartStyles('line').indexOf(emtable.tabletype) >= 0)  chartMenu +='<li><a href="javascript:;" ctype="line" ' + (emtable.chartStyle == 'line' ? 'class="selected"': '') + '><span></span></a> Line plot</li>'
-                            if (emtable.allowedChartStyles('spline').indexOf(emtable.tabletype) >= 0)  chartMenu +='<li><a href="javascript:;" ctype="spline" ' + (emtable.chartStyle == 'spline' ? 'class="selected"': '') + '><span></span></a> Spline plot</li>'
-                            if (emtable.allowedChartStyles('bar').indexOf(emtable.tabletype) >= 0)  chartMenu +='<li><a href="javascript:;" ctype="bar" ' + (emtable.chartStyle == 'bar' ? 'class="selected"': '') + '><span></span></a> Bar chart</li>'
-                            if (emtable.allowedChartStyles('pie').indexOf(emtable.tabletype) >= 0)  chartMenu +='<li><a href="javascript:;" ctype="pie" ' + (emtable.chartStyle == 'pie' ? 'class="selected"': '') + '><span></span></a> Pie chart</li>'
+                            if (emtable.allowedChartStyles('none').indexOf(emtable.data.tabletype) >= 0) chartMenu += '<li><a href="javascript:;" ctype="none" ' + (emtable.data.chartStyle == 'none' ? 'class="selected"': '') + '><span></span></a> None</li>';
+                            if (emtable.allowedChartStyles('scatter').indexOf(emtable.data.tabletype) >= 0)  chartMenu +='<li><a href="javascript:;" ctype="scatter" ' + (emtable.data.chartStyle == 'scatter' ? 'class="selected"': '') + '><span></span></a> Scatter plot</li>'
+                            if (emtable.allowedChartStyles('line').indexOf(emtable.data.tabletype) >= 0)  chartMenu +='<li><a href="javascript:;" ctype="line" ' + (emtable.data.chartStyle == 'line' ? 'class="selected"': '') + '><span></span></a> Line plot</li>'
+                            if (emtable.allowedChartStyles('spline').indexOf(emtable.data.tabletype) >= 0)  chartMenu +='<li><a href="javascript:;" ctype="spline" ' + (emtable.data.chartStyle == 'spline' ? 'class="selected"': '') + '><span></span></a> Spline plot</li>'
+                            if (emtable.allowedChartStyles('bar').indexOf(emtable.data.tabletype) >= 0)  chartMenu +='<li><a href="javascript:;" ctype="bar" ' + (emtable.data.chartStyle == 'bar' ? 'class="selected"': '') + '><span></span></a> Bar chart</li>'
+                            if (emtable.allowedChartStyles('pie').indexOf(emtable.data.tabletype) >= 0)  chartMenu +='<li><a href="javascript:;" ctype="pie" ' + (emtable.data.chartStyle == 'pie' ? 'class="selected"': '') + '><span></span></a> Pie chart</li>'
                     chartMenu +=    '</ul>\
                     </div>'
-                
                 $(this).parent('.emtabletoolbar')
                     .append(chartMenu)
                     .find('.emtablechartlistwrapper ul')
@@ -317,52 +422,74 @@
         return this;
     }
     
-    Emathtable.prototype.getData = function(options){
-        var data = {rows: this.rows, cols: this.cols, values: this.values, tabletype: this.tabletype, theme: this.theme};
+    
+
+    Emathtable.prototype.getData = function(){
+        var vals = $.extend(true, [], this.data.values);
+        // TODO: the changed metadata!
+        var result = {
+            type: "emathtable",
+            name: this.name,
+            metadata: JSON.parse(JSON.stringify(this.metadata)),
+            data: JSON.parse(JSON.stringify(this.data))
+            //data: {
+            //    rows: this.rows,
+            //    cols: this.cols,
+            //    values: vals,
+            //    tabletype: this.tabletype
+            //}
+        };
         
-        if (typeof($.fn.chart) !== 'undefined') { 
-            data.chartVisible = this.chartVisible;
-            data.chartStyle = this.chartStyle;
-            data.chartParams = this.chartParams;
-        }
+        //if (typeof($.fn.chart) !== 'undefined') { 
+        //        if (typeof this.data.chartVisible !== 'undefined') {
+        //            result.data.chartVisible = this.data.chartVisible;
+        //        }
+        //        result.data.chartStyle = this.data.chartStyle;
+        //        //result.data.chartParams = $.extend(true, {}, this.chartParams);
+        //}
         
-        options.result = data;
+        //if (options) {
+        //    options.result = result;
+        //}
+        
+        return result;
+    
     }
     
     Emathtable.prototype.setType = function(options){
-        this.tabletype = options.name;
-        this.place.attr('tabletype',this.tabletype);
+        this.data.tabletype = options.name;
+        this.place.attr('tabletype', this.data.tabletype);
     }
     
     Emathtable.prototype.showChart = function(chartStyle) {
-        if ( typeof(chartStyle !== 'undefined') ) this.chartStyle = chartStyle;
+        if ( typeof(chartStyle !== 'undefined') ) this.data.chartStyle = chartStyle;
         
         if (typeof($.fn.chart) !== 'undefined') {
             
-            if ( this.chartStyle === 'none' ) this.hideChart();
+            if ( this.data.chartStyle === 'none' ) this.hideChart();
             else {
                 var chart = this.place.find('.chart').empty();
                 if (chart.length == 0) this.place.append('<div class="chart"></div>');
                 
-                var opt = {}; this.getData(opt);
+                var opt = this.getData();
                 
-                opt.result.chartStyle = this.chartStyle;
-                opt.result.showPlot = true;
-                opt.result.dataMode = 'normal';
-                opt.result.rowLabels = 'auto';
-                opt.result.colLabels = 'auto';
+                opt.data.chartStyle = this.chartStyle;
+                opt.data.showPlot = true;
+                opt.data.dataMode = 'normal';
+                opt.data.rowLabels = 'auto';
+                opt.data.colLabels = 'auto';
                 
-                if (this.tabletype == 'prop_table') {
-                    opt.result.dataMode = 'counts';
-                    opt.result.rowLabels = true;
-                    opt.result.colLabels = true;
+                if (this.data.tabletype == 'prop_table') {
+                    opt.data.dataMode = 'counts';
+                    opt.data.rowLabels = true;
+                    opt.data.colLabels = true;
                 }
-                else if ((this.tabletype == 'value_table') || (this.tabletype == 'head_table')) {
-                    opt.result.colLabels = true;
+                else if ((this.data.tabletype == 'value_table') || (this.data.tabletype == 'head_table')) {
+                    opt.data.colLabels = true;
                 }
                 
-                opt.result = $.extend(this.chartParams, opt.result);
-                this.place.find('.chart').chart(opt.result);
+                //opt.result = $.extend(this.chartParams, opt.result);
+                this.place.find('.chart').chart(opt.data);
                 
             }
         }
@@ -370,7 +497,7 @@
     
     Emathtable.prototype.hideChart = function() {
         if (typeof($.fn.chart) !== 'undefined') {
-            this.chartStyle = 'none';
+            this.data.chartStyle = 'none';
             this.place.find('.chart').remove();
         }
     }
@@ -401,14 +528,14 @@
             if ($parent[0].tagName === 'TBODY'){
                 row = $parent.find('tr').index($tr);
             } else {
-                row = emtable.rows;
+                row = emtable.data.rows;
             }
             var newrow = [];
-            for (var i = 0; i < emtable.cols; i++){
+            for (var i = 0; i < emtable.data.cols; i++){
                 newrow.push('');
             }
-            emtable.values.splice(row, 0, newrow);
-            emtable.rows += 1;
+            emtable.data.values.splice(row, 0, newrow);
+            emtable.data.rows += 1;
             emtable.init();
             emtable.place.find('a.emtableaddremove').click();
             emtable.changed();
@@ -419,8 +546,8 @@
             var $parent = $alink.parents('tbody');
             var $tr = $alink.parents('tr').eq(0);
             var row = $parent.find('tr').index($tr);
-            emtable.values.splice(row, 1);
-            emtable.rows -= 1;
+            emtable.data.values.splice(row, 1);
+            emtable.data.rows -= 1;
             emtable.init();
             emtable.place.find('a.emtableaddremove').click();
             emtable.changed();
@@ -435,7 +562,7 @@
             for (var i = 0; i < emtable.rows; i++){
                 emtable.values[i].splice(col, 0, '');
             }
-            emtable.cols += 1;
+            emtable.data.cols += 1;
             emtable.init();
             emtable.place.find('a.emtableaddremove').click();
             emtable.changed();
@@ -447,10 +574,10 @@
             var $td = $alink.parents('td').eq(0);
             var $alltd = $alink.parents('tr').eq(0).find('td');
             var col = $alltd.index($td);
-            for (var i = 0; i < emtable.rows; i++){
-                emtable.values[i].splice(col, 1);
+            for (var i = 0; i < emtable.data.rows; i++){
+                emtable.data.values[i].splice(col, 1);
             }
-            emtable.cols -= 1;
+            emtable.data.cols -= 1;
             emtable.init();
             emtable.place.find('a.emtableaddremove').click();
             emtable.changed();
@@ -469,30 +596,38 @@
         if (typeof($.fn.chart) !== 'undefined') {
             var chart = this.place.find('.chart').empty();
             if (chart.length > 0) {
-                var opt = {}; this.getData(opt);
+                var opt = this.getData();
                 
-                opt.result.chartStyle = this.chartStyle;
-                opt.result.showPlot = true;
-                opt.result.dataMode = 'normal';
-                opt.result.rowLabels = 'auto';
-                opt.result.colLabels = 'auto';
+                opt.data.chartStyle = this.data.chartStyle;
+                opt.data.showPlot = true;
+                opt.data.dataMode = 'normal';
+                opt.data.rowLabels = 'auto';
+                opt.data.colLabels = 'auto';
                 
-                if (this.tabletype == 'prop_table') {
-                    opt.result.dataMode = 'counts';
-                    opt.result.rowLabels = true;
-                    opt.result.colLabels = true;
+                if (this.data.tabletype == 'prop_table') {
+                    opt.data.dataMode = 'counts';
+                    opt.data.rowLabels = true;
+                    opt.data.colLabels = true;
                 }
-                else if ((this.tabletype == 'value_table') || (this.tabletype == 'head_table')) {
-                    opt.result.colLabels = true;
+                else if ((this.data.tabletype == 'value_table') || (this.data.tabletype == 'head_table')) {
+                    opt.data.colLabels = true;
                 }
                 
-                opt.result = $.extend(this.chartParams, opt.result);
-                chart.chart(opt.result);
+                //opt.result = $.extend(this.chartParams, opt.result);
+                chart.chart(opt.data);
             }
         }
         
+        this.metadata.creator = this.metadata.creator || this.settings.username;
+        this.metadata.created = this.metadata.created || (new Date()).getTime();
+        this.metadata.modifier = this.settings.username;
+        this.metadata.modified = (new Date()).getTime(); 
+        
+        // TODO: Remove this one when we do not support the old book anymore
         var e = jQuery.Event("emathtable_changed");
-        this.place.trigger( e ); 
+        this.place.trigger( e );
+        // This is the one elementset is listening for
+        this.place.trigger('element_changed', {type: 'emathtable'});
     }
     
     
@@ -547,9 +682,17 @@
             '.emathtable[tabletype="value_table"] table.emtable tbody td {border-left: 2px solid black; padding: 0.2em; min-width: 2em; text-align: right;}'+
             '.emathtable[tabletype="value_table"] table.emtable thead td {padding: 0 0.2em;}'+
             '.emathtable[tabletype="value_table"] table.emtable tbody td:first-child {border-left: none;}'+
+            '.emathtable[tabletype="column_table"] table.emtable {border-collapse: collapse; background-color: white;}'+
+            '.emathtable[tabletype="column_table"] table.emtable tbody tr:first-child td {border-bottom: 2px solid black; text-align: center;}'+
+            '.emathtable[tabletype="column_table"] table.emtable tbody td {border-left: 2px solid black; padding: 0.4em 1em; min-width: 2em; text-align: center;}'+
+            '.emathtable[tabletype="column_table"] table.emtable thead td {padding: 0 0.2em;}'+
+            '.emathtable[tabletype="column_table"] table.emtable tbody td:first-child {border-left: none;}'+
             '.emathtable[tabletype="grid_table"] table.emtable {border-collapse: collapse;}'+
             '.emathtable[tabletype="grid_table"] table.emtable tbody td {border: 1px solid black; padding: 0.2em; background-color: white; min-width: 3em;}'+
             '.emathtable[tabletype="grid_table"] table.emtable thead td {padding: 0 0.2em;}'+
+            '.emathtable[tabletype="theorytable"] table.emtable {border-collapse: collapse;}'+
+            '.emathtable[tabletype="theorytable"] table.emtable tbody td {border: 1px solid black; padding: 0.5em 1em; background-color: white; min-width: 3em;}'+
+            '.emathtable[tabletype="theorytable"] table.emtable thead td {padding: 0.5 1em;}'+
             '.emathtable[tabletype="noborder"] table.emtable {border-collapse: collapse;}'+
             '.emathtable[tabletype="noborder"] table.emtable tbody td {border: none; padding: 0.2em; min-width: 3em;}'+
             '.emathtable[tabletype="blank"] table.emtable {border-collapse: collapse; background-color: white;}'+
@@ -604,47 +747,150 @@
             ''
     }
 
-})(jQuery)
-
-// TiddlyWiki-macro for usage of tables in TiddlyWiki
-if (typeof(config) !== 'undefined' && typeof(config.macros) !== 'undefined'){
-    // Create macro for TiddlyWiki
-    config.macros.emathtable = {
-        /******************************
-         * Show emathtable
-         ******************************/
-        handler: function (place, macroName, params, wikifier, paramString, tiddler)
-        {
-            if (params.length < 1){
-                wikify('Missing table.', place, null, tiddler);
-                return false;
-            }
-            var tableid = params[0];
-            var iseditable = (params[1] === 'edit'|| params[1] === 'authordialog');
-            var emtabletext = '{{emathtable emathtable_'+tableid+'{\n}}}';
-            wikify(emtabletext, place);
-            if (tiddler) {
-                var settings = jQuery.extend(true, {}, tiddler.data('emathtable',{}));
-            } else {
-                var settings = {};
-            }
-            settings[tableid] = settings[tableid] || {};
-            settings[tableid].editable = iseditable;
-            var emtable = jQuery(place).find('.emathtable.emathtable_'+tableid).last().emathtable(settings[tableid])
-            if (iseditable &&  params[1] !== 'authordialog') {
-                emtable.bind('emathtable_changed', function(e){
-                    var $emtplace = jQuery(this);
-                    var data = $emtplace.emathtable('get');
-                    var settings = tiddler.data('emathtable', {});
-                    settings[tableid] = data;
-                    var autosavestatus = config.options.chkAutoSave;
-                    config.options.chkAutoSave = false;
-                    tiddler.setData('emathtable', settings);
-                    config.options.chkAutoSave = autosavestatus;
-                });
-            }
-            
+        
+    /***************************************************************************
+     * Default settings.
+     **************************************************************************/
+    Emathtable.defaults = {
+        type: 'emathtable',
+        metadata : {
+            creator : '',
+            created : '',
+            modifier : '',
+            modified : '',
+            tags : []
+        },
+        data : {
+            tabletype : 'value_table', // Type of table (styled with css)
+            theme : "default_theme", // html class for other styling
+            rows: 2,
+            cols: 2,
+            values : [],
+            chartVisible : true,
+            chartStyle: 'none'
+        },
+        settings : {
+            mode : 'view',
+            preview : false,
+            uilang : 'en'
         }
     }
-}
+    
+    /******
+     * Modes
+     ******/
+    Emathtable.modes = {
+        view: {
+            editable: false,
+            authorable: false,
+            reviewable: false
+        },
+        edit: {
+            editable: true,
+            authorable: false,
+            reviewable: false
+        },
+        edit_html: {
+            editable: true,
+            authorable: false,
+            reviewable: false
+        },
+        review: {
+            editable: false,
+            authorable: false,
+            reviewable: true
+        },
+        author: {
+            editable: true,
+            authorable: true,
+            reviewable: false
+        }
+    }
+
+    Emathtable.elementinfo = {
+        type : 'emathtable',
+        elementtype : ['elements', 'studentelements'],
+        jquery : 'emathtable',
+        name : 'Emath table',
+        icon : '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="20" height="20" viewBox="0 0 30 30" class="mini-icon mini-icon-emathtable"><path style="stroke: none;" d="M14 2 l2 0 l0 8 l10 0 l0 2 l-10 0 l0 15 l-2 0 l0 -15 l-10 0 l0 -2 l10 0z" /><text x="9" y="8" style="font-size: 6px; text-anchor: middle;">x</text><text x="21" y="8" style="font-size: 6px; text-anchor: middle;">y</text><text x="9" y="18" style="font-size: 6px; text-anchor: middle;">0</text><text x="21" y="18" style="font-size: 6px; text-anchor: middle;">4</text><text x="9" y="25" style="font-size: 6px; text-anchor: middle;">1</text><text x="21" y="25" style="font-size: 6px; text-anchor: middle;">8</text></svg>',
+        description : {
+            en : 'Math tables',
+            fi : 'Matematiikkataulukot'
+        },
+        roles: ['teacher', 'student', 'author'],
+        classes : ['math'],
+        weight: 10000
+    }
+
+    Emathtable.tableelementinfo = {
+        type : 'tableelement',
+        elementtype : ['elements', 'studentelements'],
+        jquery : 'tableelement',
+        name : 'Emath table',
+        icon : '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="20" height="20" viewBox="0 0 30 30" class="mini-icon mini-icon-emathtable"><path style="stroke: none;" d="M14 2 l2 0 l0 8 l10 0 l0 2 l-10 0 l0 15 l-2 0 l0 -15 l-10 0 l0 -2 l10 0z" /><text x="9" y="8" style="font-size: 6px; text-anchor: middle;">x</text><text x="21" y="8" style="font-size: 6px; text-anchor: middle;">y</text><text x="9" y="18" style="font-size: 6px; text-anchor: middle;">0</text><text x="21" y="18" style="font-size: 6px; text-anchor: middle;">4</text><text x="9" y="25" style="font-size: 6px; text-anchor: middle;">1</text><text x="21" y="25" style="font-size: 6px; text-anchor: middle;">8</text></svg>',
+        description : {
+            en : 'Math tables',
+            fi : 'Matematiikkataulukot'
+        },
+        roles: [],
+        classes : ['math'],
+        weight: 10000
+    }
+
+    if (typeof ($.fn.elementset) === 'function') {
+        $.fn.elementset('addelementtype', Emathtable.elementinfo);
+        $.fn.elementset('addelementtype', Emathtable.tableelementinfo);
+    }
+
+    if (typeof ($.fn.elementpanel) === 'function') {
+        $.fn.elementpanel('addelementtype', Emathtable.elementinfo);
+        $.fn.elementpanel('addelementtype', Emathtable.tableelementinfo);
+    }
+    
+
+})(jQuery)
+
+
+
+// TiddlyWiki-macro for usage of tables in TiddlyWiki
+//if (typeof(config) !== 'undefined' && typeof(config.macros) !== 'undefined'){
+//    // Create macro for TiddlyWiki
+//    config.macros.emathtable = {
+//        /******************************
+//         * Show emathtable
+//         ******************************/
+//        handler: function (place, macroName, params, wikifier, paramString, tiddler)
+//        {
+//            if (params.length < 1){
+//                wikify('Missing table.', place, null, tiddler);
+//                return false;
+//            }
+//            var tableid = params[0];
+//            var iseditable = (params[1] === 'edit'|| params[1] === 'authordialog');
+//            var emtabletext = '{{emathtable emathtable_'+tableid+'{\n}}}';
+//            wikify(emtabletext, place);
+//            if (tiddler) {
+//                var settings = jQuery.extend(true, {}, tiddler.data('emathtable',{}));
+//            } else {
+//                var settings = {};
+//            }
+//            settings[tableid] = settings[tableid] || {};
+//            settings[tableid].editable = iseditable;
+//            var emtable = jQuery(place).find('.emathtable.emathtable_'+tableid).last().emathtable(settings[tableid])
+//            if (iseditable &&  params[1] !== 'authordialog') {
+//                emtable.bind('emathtable_changed', function(e){
+//                    var $emtplace = jQuery(this);
+//                    var data = $emtplace.emathtable('get');
+//                    var settings = tiddler.data('emathtable', {});
+//                    settings[tableid] = data;
+//                    var autosavestatus = config.options.chkAutoSave;
+//                    config.options.chkAutoSave = false;
+//                    tiddler.setData('emathtable', settings);
+//                    config.options.chkAutoSave = autosavestatus;
+//                });
+//            }
+//            
+//        }
+//    }
+//}
 //}}}
