@@ -67,33 +67,8 @@
                     }
                 );
                 settings.settings.mode = (options.editable ? 'edit' : 'view');
-                //settings = $.extend({
-                //    tabletype : 'value_table', // Type of table (styled with css)
-                //    theme : "default_theme", // html class for other styling
-                //    rows : 2,
-                //    cols : 2,
-                //    chartVisible : true,
-                //    values : [],
-                //    editable : false,
-                //    settings : options.settings,
-                //    metadata : options.metadata
-                //}, options);
             } else {
                 settings = options;
-            //
-            //    settings = $.extend({
-            //        tabletype : 'value_table',
-            //        theme : "default_theme",
-            //        editable : (options.settings.mode == 'edit'),
-            //        rows : options.data.rows,
-            //        cols :  options.data.cols,
-            //        settings : options.settings,
-            //        metadata : options.metadata,
-            //        values : options.data.values,
-            //        chartVisible : options.data.chartVisible,
-            //        chartStyle : options.data.chartStyle,
-            //        //chartParams : options.data.chart
-            //    }, options.data);
             }
             // Return this so that methods of jQuery element can be chained.
             return this.each(function() {
@@ -135,22 +110,10 @@
         this.data = settings.data;
         this.type = settings.type;
         
-        console.log('emathtable', this);
         this.place = $(place);
         this.place.addClass('emathtable');
         this.name = this.place.attr('data-element-name');
-        //this.theme = settings.theme;
-        //this.tabletype = settings.tabletype;
-        //this.rows = parseInt(settings.rows);
-        //this.cols = parseInt(settings.cols);
-        //this.values = settings.values;
-        //this.editable = settings.editable;
-        //this.chartVisible = settings.chartVisible;
-        //this.chartStyle = settings.chartStyle;
-        //this.chartParams = settings.chart;
-        //if (typeof(this.chartParams) === 'undefined') this.chartParams = new Object();
         
-        console.log('settings.mode', this.settings.mode);
         this.setMode(this.settings.mode);
         
         // Make sure, the table is full rows x cols
@@ -432,25 +395,7 @@
             name: this.name,
             metadata: JSON.parse(JSON.stringify(this.metadata)),
             data: JSON.parse(JSON.stringify(this.data))
-            //data: {
-            //    rows: this.rows,
-            //    cols: this.cols,
-            //    values: vals,
-            //    tabletype: this.tabletype
-            //}
         };
-        
-        //if (typeof($.fn.chart) !== 'undefined') { 
-        //        if (typeof this.data.chartVisible !== 'undefined') {
-        //            result.data.chartVisible = this.data.chartVisible;
-        //        }
-        //        result.data.chartStyle = this.data.chartStyle;
-        //        //result.data.chartParams = $.extend(true, {}, this.chartParams);
-        //}
-        
-        //if (options) {
-        //    options.result = result;
-        //}
         
         return result;
     
@@ -488,7 +433,6 @@
                     opt.data.colLabels = true;
                 }
                 
-                //opt.result = $.extend(this.chartParams, opt.result);
                 this.place.find('.chart').chart(opt.data);
                 
             }
