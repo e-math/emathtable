@@ -18,9 +18,6 @@
         // Test for numberline commands and trigger command with options.
         if (typeof(options) === 'string'){
             var cmd = options;
-            if (arguments[0] === 'createDefaultUserSettings') {
-                return methods['createDefaultUserSettings'];
-            }
             options = arguments[1] || {};
             if (typeof(options) === 'string'){
                 options = {name: options};
@@ -37,24 +34,25 @@
             return this;
         }
 
-    }
+    };
     
     /**** jQuery-plugin for TableElements. *****/
     var methods = {
         'init' : function(options) {
 
-            var useLegacyDataType = (options['type'] == null);
+            var useLegacyDataType = !options.type;
 
             var settings;
             
-            options = $.extend(true, {}, Emathtable.defaults, options);
+            //options = $.extend(true, {}, Emathtable.defaults, options);
 
             if (useLegacyDataType) {
                 // Extend default settings with user given options.
                 settings = $.extend(true, {},
                     Emathtable.defaults,
                     {
-                        metadata: options.metadata,
+                        type: 'emathtable',
+                        metadata: options.metadata || {},
                         data: {
                             tabletype: options.tabletype,
                             theme: options.theme,
@@ -68,7 +66,7 @@
                 );
                 settings.settings.mode = (options.editable ? 'edit' : 'view');
             } else {
-                settings = options;
+                settings = $.extend(true, {}, Emathtable.defaults, options);
             }
             // Return this so that methods of jQuery element can be chained.
             return this.each(function() {
@@ -137,7 +135,7 @@
             if (typeof(this.data.chartStyle) === 'undefined') this.data.chartStyle = 'none';
             $('<div></div>').chart({showPlot: false});
         }
-    }
+    };
     
     Emathtable.prototype.init = function(){
         // Init and draw the table
@@ -145,6 +143,25 @@
         if (this.place.hasClass('emathtable_rendered')){
 //             return false;
         }
+        this.draw();
+        this.initEvents();
+        return this;
+    };
+    
+    /******
+     * Set the mode of the element.
+     * @param {String} mode - the mode of element: 'view', 'edit', 'review', 'author',...
+     ******/
+    Emathtable.prototype.setMode = function(mode){
+        this.settings.mode = Emathtable.modes[mode] && mode || 'view';
+        mode = this.settings.mode;
+        var modesettings = Emathtable.modes[mode];
+        this.editable = modesettings.editable;
+        this.authorable = modesettings.authorable;
+        this.reviewable = modesettings.reviewable;
+    };
+    
+    Emathtable.prototype.draw = function(){
         this.place.addClass('emathtable_rendered').addClass(this.data.theme).attr('tabletype',this.data.tabletype);
         var toolbar = this.editable ? '<div class="emtabletoolbar"><a href="javascript:;" class="emtabletoolbutton emtabletypeselect"><span></span></a><a href="javascript:;" class="emtabletoolbutton emtableaddremove"><span></span></a></div>' : '';
         
@@ -156,29 +173,11 @@
             }
         }
         this.emtablenumber = -1;
-        while ($('#emtable_'+(++this.emtablenumber)).length > 0){};
-        $emtable.attr('id','#emtable_'+this.emtablenumber)
+        while ($('#emtable_'+(++this.emtablenumber)).length > 0){}
+        $emtable.attr('id','#emtable_'+this.emtablenumber);
         this.place.empty().append($emtable);
         this.table = $emtable.find('table.emtable');
         this.tbody = this.table.find('tbody');
-        this.draw();
-        this.initEvents();
-        return this;
-    }
-    
-    /******
-     * Set the mode of the element.
-     * @param {String} mode - the mode of element: 'view', 'edit', 'review', 'author',...
-     ******/
-    Emathtable.prototype.setMode = function(mode){
-        this.settings.mode = mode || 'view';
-        var modesettings = Emathtable.modes[mode] || Emathtable.modes.view;
-        this.editable = modesettings.editable;
-        this.authorable = modesettings.authorable;
-        this.reviewable = modesettings.reviewable;
-    }
-    
-    Emathtable.prototype.draw = function(){
         if (this.editable){
             this.edit();
         } else {
@@ -202,7 +201,138 @@
         }
         
         this.tbody.html(tablebody);
-        this.tbody.find('.mathquill-editable').mathquill('editable').focusout(function(e){
+        this.tbody.find('.mathquill-editable').mathquill('editable');
+    };
+    
+    Emathtable.prototype.show = function(){
+        var emtable = this;
+        this.place.removeClass('emtable_editmode');
+        var tablebody = '';
+        for (var i = 0; i < this.data.rows; i++){
+            tablebody += '<tr>';
+            for (var j = 0; j < this.data.cols; j++){
+                tablebody += '<td><span class="mathquill-embedded-latex">'+this.data.values[i][j]+'</span></td>';
+            }
+            tablebody += '</tr>';
+        }
+        this.tbody.html(tablebody);
+        this.tbody.find('.mathquill-embedded-latex').mathquill();
+    };
+    
+    Emathtable.prototype.allowedChartStyles = function(tabletype) {
+        if (tabletype === 'none') return(['noborder', 'blank', 'grid_table', 'value_table', 'head_table', 'prop_table']);
+        if ((tabletype === 'scatter') || (tabletype === 'line') || (tabletype === 'spline')) return(['noborder', 'blank', 'grid_table', 'value_table']);
+        if ((tabletype === 'bar') || (tabletype === 'pie')) return(['noborder', 'blank', 'grid_table', 'head_table', 'prop_table']);
+        return([/* Unkown table type has no chart affiliations. */]);
+    };
+    
+    Emathtable.prototype.initEvents = function(){
+        var emtable = this;
+        this.place.off('setmode').on('setmode', function(e, data) {
+            e.stopPropagation();
+            emtable.setMode(data);
+            emtable.draw();
+        });
+        this.place.off('getdata').on('getdata', function(e){
+            e.stopPropagation();
+            emtable.place.data('[[elementdata]]', emtable.getData());
+        });
+        this.place.off('tabletype').on('tabletype', function(e, options){
+            e.stopPropagation();
+            return emtable.setType(options);
+        });
+        
+        this.place.off('click', 'a.emtabletypeselect').on('click', 'a.emtabletypeselect', function(e){
+            e.stopPropagation();
+            e.preventDefault();
+            if ($(this).hasClass('isopen')){
+                $(this).parent('.emtabletoolbar').find('.emtabletypelistwrapper ul')
+                    .hide('slide', {direction: 'left'}, 300, function(){
+                        $(this).parents('.emtabletypelistwrapper').remove();
+                    });
+                $(this).removeClass('isopen');
+            } else {
+                // Close the other menus if open.
+                var chartSelect = $(this).parents('.emathtable').find('a.emtabletogglechart');
+                if ( chartSelect.hasClass('isopen') ) chartSelect.click();
+                
+                $(this).parent('.emtabletoolbar')
+                    .append(
+                        '<div class="emtabletypelistwrapper">\
+                            <ul>\
+                                <li><a href="javascript:;" ttype="noborder"><span></span></a> No border</li>\
+                                <li><a href="javascript:;" ttype="blank"><span></span></a> Blank</li>\
+                                <li><a href="javascript:;" ttype="grid_table"><span></span></a> Grid table</li>\
+                                <li><a href="javascript:;" ttype="value_table"><span></span></a> Value table</li>\
+                                <li><a href="javascript:;" ttype="head_table"><span></span></a> Categorized</li>\
+                                <li><a href="javascript:;" ttype="prop_table"><span></span></a> Counts</li>\
+                            </ul>\
+                        </div>')
+                    .find('.emtabletypelistwrapper ul')
+                    .hide().show('slide',{direction: 'left'}, 300)
+                    .find('a').click(function(e){
+                        $(this).parents('.emathtable').emathtable('tabletype', $(this).attr('ttype'));
+                        if (emtable.allowedChartStyles(emtable.data.chartStyle).indexOf(emtable.data.tabletype) < 0) emtable.hideChart();
+                        emtable.changed();
+                    });
+                $(this).addClass('isopen');
+            }
+        });
+        
+        this.place.off('click', 'a.emtabletogglechart').on('click', 'a.emtabletogglechart', function(e){
+            e.stopPropagation();
+            e.preventDefault();
+            if ($(this).hasClass('isopen')){
+                $(this).parent('.emtabletoolbar').find('.emtablechartlistwrapper ul')
+                    .hide('slide', {direction: 'left'}, 300, function(){
+                        $(this).parents('.emtablechartlistwrapper').remove();
+                    });
+                $(this).removeClass('isopen');
+            } else {
+                
+                // Close the other menus if open.
+                var typeSelect = $(this).parents('.emathtable').find('a.emtabletypeselect');
+                if ( typeSelect.hasClass('isopen') ) typeSelect.click();
+                
+                var chartMenu = 
+                    '<div class="emtablechartlistwrapper">\
+                        <ul>'
+                            if (emtable.allowedChartStyles('none').indexOf(emtable.data.tabletype) >= 0) chartMenu += '<li><a href="javascript:;" ctype="none" ' + (emtable.data.chartStyle == 'none' ? 'class="selected"': '') + '><span></span></a> None</li>';
+                            if (emtable.allowedChartStyles('scatter').indexOf(emtable.data.tabletype) >= 0)  chartMenu +='<li><a href="javascript:;" ctype="scatter" ' + (emtable.data.chartStyle == 'scatter' ? 'class="selected"': '') + '><span></span></a> Scatter plot</li>'
+                            if (emtable.allowedChartStyles('line').indexOf(emtable.data.tabletype) >= 0)  chartMenu +='<li><a href="javascript:;" ctype="line" ' + (emtable.data.chartStyle == 'line' ? 'class="selected"': '') + '><span></span></a> Line plot</li>'
+                            if (emtable.allowedChartStyles('spline').indexOf(emtable.data.tabletype) >= 0)  chartMenu +='<li><a href="javascript:;" ctype="spline" ' + (emtable.data.chartStyle == 'spline' ? 'class="selected"': '') + '><span></span></a> Spline plot</li>'
+                            if (emtable.allowedChartStyles('bar').indexOf(emtable.data.tabletype) >= 0)  chartMenu +='<li><a href="javascript:;" ctype="bar" ' + (emtable.data.chartStyle == 'bar' ? 'class="selected"': '') + '><span></span></a> Bar chart</li>'
+                            if (emtable.allowedChartStyles('pie').indexOf(emtable.data.tabletype) >= 0)  chartMenu +='<li><a href="javascript:;" ctype="pie" ' + (emtable.data.chartStyle == 'pie' ? 'class="selected"': '') + '><span></span></a> Pie chart</li>'
+                    chartMenu +=    '</ul>\
+                    </div>'
+                $(this).parent('.emtabletoolbar')
+                    .append(chartMenu)
+                    .find('.emtablechartlistwrapper ul')
+                    .hide().show('slide',{direction: 'left'}, 300)
+                    .find('a').click(function(e){
+                        $(this).parents('.emtablechartlistwrapper ul').find('li a').removeClass('selected');
+                        $(this).addClass('selected');
+                        emtable.showChart($(this).attr('ctype'));
+                        emtable.changed();
+                    });
+                $(this).addClass('isopen');
+            }
+        });
+        
+        this.place.off('click', 'a.emtableaddremove').on('click', 'a.emtableaddremove', function(e){
+            e.stopPropagation();
+            e.preventDefault();
+            if ($(this).hasClass('isopen')){
+                emtable.hideAddremove();
+                $(this).removeClass('isopen');
+            } else {
+                emtable.showAddremove();
+                $(this).addClass('isopen');
+            }
+        });
+        
+        this.place.off('focusout', 'td .mathquill-editable').on('focusout', 'td .mathquill-editable', function(e){
+            e.stopPropagation();
             var $elem = $(this);
             var $td = $elem.parents('td').eq(0);
             var $tr = $td.parents('tr').eq(0);
@@ -213,7 +343,7 @@
             var col = $alltd.index($td);
             emtable.data.values[row][col] = $elem.mathquill('latex');
             emtable.changed();
-        }).bind('keydown.emtable',function(e){
+        }).off('keydown.emtable', 'td .mathquill-editable').on('keydown.emtable', 'td .mathquill-editable', function(e){
             var $mqelem = $(this);
             var instart = $mqelem.children('span').eq(1).hasClass('cursor');
             var inend = $mqelem.children('span').last().hasClass('cursor');
@@ -262,128 +392,8 @@
                     break;
             }
         });
-    }
-    
-    Emathtable.prototype.show = function(){
-        var emtable = this;
-        this.place.removeClass('emtable_editmode');
-        var tablebody = '';
-        for (var i = 0; i < this.data.rows; i++){
-            tablebody += '<tr>';
-            for (var j = 0; j < this.data.cols; j++){
-                tablebody += '<td><span class="mathquill-embedded-latex">'+this.data.values[i][j]+'</span></td>';
-            }
-            tablebody += '</tr>';
-        }
-        this.tbody.html(tablebody);
-        this.tbody.find('.mathquill-embedded-latex').mathquill();
-    }
-    
-    Emathtable.prototype.allowedChartStyles = function(tabletype) {
-        if (tabletype === 'none') return(['noborder', 'blank', 'grid_table', 'value_table', 'head_table', 'prop_table']);
-        if ((tabletype === 'scatter') || (tabletype === 'line') || (tabletype === 'spline')) return(['noborder', 'blank', 'grid_table', 'value_table']);
-        if ((tabletype === 'bar') || (tabletype === 'pie')) return(['noborder', 'blank', 'grid_table', 'head_table', 'prop_table']);
-        return([/* Unkown table type has no chart affiliations. */])
-    }
-    
-    Emathtable.prototype.initEvents = function(){
-        var emtable = this;
-        this.place.on('setmode', function(e, data) {
-            e.stopPropagation();
-            emtable.setMode(data);
-        });
-        this.place.on('getdata', function(e){
-            emtable.place.data('[[elementdata]]', emtable.getData());
-        });
-        this.place.on('tabletype', function(e, options){
-            return emtable.setType(options);
-        });
-        
-        this.place.find('a.emtabletypeselect').click(function(e){
-            if ($(this).hasClass('isopen')){
-                $(this).parent('.emtabletoolbar').find('.emtabletypelistwrapper ul')
-                    .hide('slide', {direction: 'left'}, 300, function(e){
-                        $(this).parents('.emtabletypelistwrapper').remove()
-                    });
-                $(this).removeClass('isopen');
-            } else {
-                // Close the other menus if open.
-                var chartSelect = $(this).parents('.emathtable').find('a.emtabletogglechart');
-                if ( chartSelect.hasClass('isopen') ) chartSelect.click();
-                
-                $(this).parent('.emtabletoolbar')
-                    .append(
-                        '<div class="emtabletypelistwrapper">\
-                            <ul>\
-                                <li><a href="javascript:;" ttype="noborder"><span></span></a> No border</li>\
-                                <li><a href="javascript:;" ttype="blank"><span></span></a> Blank</li>\
-                                <li><a href="javascript:;" ttype="grid_table"><span></span></a> Grid table</li>\
-                                <li><a href="javascript:;" ttype="value_table"><span></span></a> Value table</li>\
-                                <li><a href="javascript:;" ttype="head_table"><span></span></a> Categorized</li>\
-                                <li><a href="javascript:;" ttype="prop_table"><span></span></a> Counts</li>\
-                            </ul>\
-                        </div>')
-                    .find('.emtabletypelistwrapper ul')
-                    .hide().show('slide',{direction: 'left'}, 300)
-                    .find('a').click(function(e){
-                        $(this).parents('.emathtable').emathtable('tabletype', $(this).attr('ttype'));
-                        if (emtable.allowedChartStyles(emtable.data.chartStyle).indexOf(emtable.data.tabletype) < 0) emtable.hideChart();
-                        emtable.changed();
-                    });
-                $(this).addClass('isopen');
-            }
-        });
-        
-        this.place.find('a.emtabletogglechart').off('click').on('click', function(e){
-            if ($(this).hasClass('isopen')){
-                $(this).parent('.emtabletoolbar').find('.emtablechartlistwrapper ul')
-                    .hide('slide', {direction: 'left'}, 300, function(e){
-                        $(this).parents('.emtablechartlistwrapper').remove()
-                    });
-                $(this).removeClass('isopen');
-            } else {
-                
-                // Close the other menus if open.
-                var typeSelect = $(this).parents('.emathtable').find('a.emtabletypeselect');
-                if ( typeSelect.hasClass('isopen') ) typeSelect.click();
-                
-                var chartMenu = 
-                    '<div class="emtablechartlistwrapper">\
-                        <ul>'
-                            if (emtable.allowedChartStyles('none').indexOf(emtable.data.tabletype) >= 0) chartMenu += '<li><a href="javascript:;" ctype="none" ' + (emtable.data.chartStyle == 'none' ? 'class="selected"': '') + '><span></span></a> None</li>';
-                            if (emtable.allowedChartStyles('scatter').indexOf(emtable.data.tabletype) >= 0)  chartMenu +='<li><a href="javascript:;" ctype="scatter" ' + (emtable.data.chartStyle == 'scatter' ? 'class="selected"': '') + '><span></span></a> Scatter plot</li>'
-                            if (emtable.allowedChartStyles('line').indexOf(emtable.data.tabletype) >= 0)  chartMenu +='<li><a href="javascript:;" ctype="line" ' + (emtable.data.chartStyle == 'line' ? 'class="selected"': '') + '><span></span></a> Line plot</li>'
-                            if (emtable.allowedChartStyles('spline').indexOf(emtable.data.tabletype) >= 0)  chartMenu +='<li><a href="javascript:;" ctype="spline" ' + (emtable.data.chartStyle == 'spline' ? 'class="selected"': '') + '><span></span></a> Spline plot</li>'
-                            if (emtable.allowedChartStyles('bar').indexOf(emtable.data.tabletype) >= 0)  chartMenu +='<li><a href="javascript:;" ctype="bar" ' + (emtable.data.chartStyle == 'bar' ? 'class="selected"': '') + '><span></span></a> Bar chart</li>'
-                            if (emtable.allowedChartStyles('pie').indexOf(emtable.data.tabletype) >= 0)  chartMenu +='<li><a href="javascript:;" ctype="pie" ' + (emtable.data.chartStyle == 'pie' ? 'class="selected"': '') + '><span></span></a> Pie chart</li>'
-                    chartMenu +=    '</ul>\
-                    </div>'
-                $(this).parent('.emtabletoolbar')
-                    .append(chartMenu)
-                    .find('.emtablechartlistwrapper ul')
-                    .hide().show('slide',{direction: 'left'}, 300)
-                    .find('a').click(function(e){
-                        $(this).parents('.emtablechartlistwrapper ul').find('li a').removeClass('selected');
-                        $(this).addClass('selected');
-                        emtable.showChart($(this).attr('ctype'));
-                        emtable.changed();
-                    });
-                $(this).addClass('isopen');
-            }
-        });
-        
-        this.place.find('a.emtableaddremove').click(function(e){
-            if ($(this).hasClass('isopen')){
-                emtable.hideAddremove();
-                $(this).removeClass('isopen');
-            } else {
-                emtable.showAddremove();
-                $(this).addClass('isopen');
-            }
-        });
-        
         return this;
-    }
+    };
     
     
 
@@ -451,7 +461,7 @@
         this.table.addClass('emtable_addremove');
         var removetr = '<thead class="emtableremovetr"><tr>';
         var addtr = '<thead class="emtableaddtr"><tr>';
-        for (var i = 0; i < this.cols; i++){
+        for (var i = 0; i < this.data.cols; i++){
             removetr += '<td><a href="javascript:;" class="emtableremovecol"><span></span></a></td>';
             addtr += '<td><a href="javascript:;" class="emtableaddcol"><span></span></a></td>';
         }
@@ -503,8 +513,8 @@
             var $td = $alink.parents('td').eq(0);
             var $alltd = $alink.parents('tr').eq(0).find('td');
             var col = $alltd.index($td);
-            for (var i = 0; i < emtable.rows; i++){
-                emtable.values[i].splice(col, 0, '');
+            for (var i = 0; i < emtable.data.rows; i++){
+                emtable.data.values[i].splice(col, 0, '');
             }
             emtable.data.cols += 1;
             emtable.init();

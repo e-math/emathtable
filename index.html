@@ -21,14 +21,9 @@
 
                 jQuery('#box1').emathtable(data2);
                 jQuery('#iseditable').attr('checked', data2.editable).change(function(){
-                    var etdata = jQuery('#box1').emathtable('get');
-                    etdata.editable = jQuery(this).is(':checked');
-                    jQuery('#box1').emathtable(etdata);
-                    
-                    var etdata2 = jQuery('#box2').emathtable('get');
-                    etdata2.settings = jQuery('#box1').emathtable('createDefaultUserSettings');
-                    etdata2.settings.mode = etdata.editable ? 'edit' : 'view';
-                    jQuery('#box2').emathtable(etdata2);
+					var newmode = (jQuery(this).is(':checked') ? 'edit' : 'view');
+                    jQuery('#box1').trigger('setmode', newmode);
+                    jQuery('#box2').trigger('setmode', newmode);
                 });
                 
                 var newDataFormat = {
