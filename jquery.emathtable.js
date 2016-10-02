@@ -44,7 +44,6 @@
 
             var settings;
             
-            //options = $.extend(true, {}, Emathtable.defaults, options);
 
             if (useLegacyDataType) {
                 // Extend default settings with user given options.
@@ -766,14 +765,14 @@
         elementtype : ['elements', 'studentelements'],
         jquery : 'emathtable',
         name : 'Emath table',
-        icon : '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="20" height="20" viewBox="0 0 30 30" class="mini-icon mini-icon-emathtable"><path style="stroke: none;" d="M14 2 l2 0 l0 8 l10 0 l0 2 l-10 0 l0 15 l-2 0 l0 -15 l-10 0 l0 -2 l10 0z" /><text x="9" y="8" style="font-size: 6px; text-anchor: middle;">x</text><text x="21" y="8" style="font-size: 6px; text-anchor: middle;">y</text><text x="9" y="18" style="font-size: 6px; text-anchor: middle;">0</text><text x="21" y="18" style="font-size: 6px; text-anchor: middle;">4</text><text x="9" y="25" style="font-size: 6px; text-anchor: middle;">1</text><text x="21" y="25" style="font-size: 6px; text-anchor: middle;">8</text></svg>',
+        icon : '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="20" height="20" viewBox="0 0 30 30" class="mini-icon mini-icon-emathtable"><path style="stroke: none;" d="M14 2 h1 v8 h10 v1 h-10 v15 h-1 v-15 h-10 v-1 h10z" /><text x="9" y="8" style="font-size: 6px; text-anchor: middle;">x</text><text x="21" y="8" style="font-size: 6px; text-anchor: middle;">y</text><text x="9" y="18" style="font-size: 6px; text-anchor: middle;">0</text><text x="21" y="18" style="font-size: 6px; text-anchor: middle;">4</text><text x="9" y="25" style="font-size: 6px; text-anchor: middle;">1</text><text x="21" y="25" style="font-size: 6px; text-anchor: middle;">8</text></svg>',
         description : {
             en : 'Math tables',
-            fi : 'Matematiikkataulukot'
+            fi : 'Matematiikkataulukko'
         },
         roles: ['teacher', 'student', 'author'],
         classes : ['math'],
-        weight: 10000
+        weight: 20
     }
 
     Emathtable.tableelementinfo = {
@@ -781,13 +780,13 @@
         elementtype : ['elements', 'studentelements'],
         jquery : 'tableelement',
         name : 'Emath table',
-        icon : '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="20" height="20" viewBox="0 0 30 30" class="mini-icon mini-icon-emathtable"><path style="stroke: none;" d="M14 2 l2 0 l0 8 l10 0 l0 2 l-10 0 l0 15 l-2 0 l0 -15 l-10 0 l0 -2 l10 0z" /><text x="9" y="8" style="font-size: 6px; text-anchor: middle;">x</text><text x="21" y="8" style="font-size: 6px; text-anchor: middle;">y</text><text x="9" y="18" style="font-size: 6px; text-anchor: middle;">0</text><text x="21" y="18" style="font-size: 6px; text-anchor: middle;">4</text><text x="9" y="25" style="font-size: 6px; text-anchor: middle;">1</text><text x="21" y="25" style="font-size: 6px; text-anchor: middle;">8</text></svg>',
+        icon : '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="20" height="20" viewBox="0 0 30 30" class="mini-icon mini-icon-emathtable"><path style="stroke: none;" d="M14 2 h1 v8 h10 v1 h-10 v15 h-1 v-15 h-10 v-1 h10z" /><text x="9" y="8" style="font-size: 6px; text-anchor: middle;">x</text><text x="21" y="8" style="font-size: 6px; text-anchor: middle;">y</text><text x="9" y="18" style="font-size: 6px; text-anchor: middle;">0</text><text x="21" y="18" style="font-size: 6px; text-anchor: middle;">4</text><text x="9" y="25" style="font-size: 6px; text-anchor: middle;">1</text><text x="21" y="25" style="font-size: 6px; text-anchor: middle;">8</text></svg>',
         description : {
             en : 'Math tables',
-            fi : 'Matematiikkataulukot'
+            fi : 'Matematiikkataulukko'
         },
         roles: [],
-        classes : ['math'],
+        classes : ['viewonly'],
         weight: 10000
     }
 
